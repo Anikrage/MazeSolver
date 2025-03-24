@@ -40,19 +40,14 @@ To run the project with default settings:
 
 python main.py
 
-Command-line Options
+### Command-line Options
+- `--maze_size`: Size of the maze (default: 10)
+- `--episodes`: Number of training episodes (default: 1000)
+- `--visualize`: Enable real-time visualization
+- `--update_interval`: Visualization update interval in episodes (default: 5)
+- `--save_model`: Save the trained Q-table
+- `--seed`: Set random seed for reproducibility (default: None, generates different maze each time)
 
-    --maze_size: Size of the maze (default: 10)
-
-    --episodes: Number of training episodes (default: 1000)
-
-    --visualize: Enable real-time visualization
-
-    --update_interval: Visualization update interval in episodes (default: 5)
-
-    --save_model: Save the trained Q-table
-
-    --seed: Set random seed for reproducibility (default: 42)
 
 Examples
 

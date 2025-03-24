@@ -1,10 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from visualizer import RealTimeVisualizer
 
 class Trainer:
     def __init__(self, environment, agent):
+        """
+        Initialize the trainer.
+        
+        Args:
+            environment: The maze environment.
+            agent: The Q-learning agent.
+        """
         self.environment = environment
         self.agent = agent
         self.training_history = {
@@ -12,28 +18,29 @@ class Trainer:
             'episode_lengths': [],
             'exploration_rates': []
         }
-        self.fig = None
         self.visualizer = None
-
-    def train(self, episodes=5000, realtime_animation=True, update_interval=10):
+        self.ani = None
+        
+    def train(self, episodes=5000, realtime_animation=False, update_interval=5):
+        """
+        Train the agent on the environment.
+        
+        Args:
+            episodes: The number of episodes to train for.
+            realtime_animation: Whether to show real-time animation.
+            update_interval: How often to update the animation.
+            
+        Returns:
+            The training history.
+        """
         if realtime_animation:
-            self.visualizer = RealTimeVisualizer(
-                self.environment.maze, self.agent, self.environment
-            )
-            self.ani = FuncAnimation(
-                self.visualizer.fig, 
-                self.visualizer.update_plot, 
-                frames=episodes,
-                interval=30,  # Reduced from 50ms to 30ms
-                blit=True,
-                repeat=False,
-                cache_frame_data=False  # Reduces memory usage
-            )
-        
-        
-# Store performance metrics
-        scores = []
-        avg_scores = []
+            from visualizer import Visualizer
+            self.visualizer = Visualizer(self.environment.maze, self.agent, self.environment)
+            self.ani = FuncAnimation(self.visualizer.fig, self.visualizer.update_plot, 
+                                    frames=range(1, episodes+1, update_interval),
+                                    interval=100, blit=True)
+            plt.draw()
+            plt.pause(0.1)
         
         for episode in range(1, episodes + 1):
             state = self.environment.reset()
@@ -49,35 +56,23 @@ class Trainer:
                 total_reward += reward
                 steps += 1
                 
+            # Decay exploration rate at the end of each episode
             self.agent.decay_exploration()
             
-            # Update metrics
-            scores.append(total_reward)
-            avg_score = np.mean(scores[-100:])  # Rolling 100-episode average
-            avg_scores.append(avg_score)
-            
-            # Update training history
+            # Record history
             self.training_history['episode_rewards'].append(total_reward)
             self.training_history['episode_lengths'].append(steps)
-            self.training_history['exploration_rates'].append(
-                self.agent.exploration_rate
-            )
-            self.training_history['average_scores'] = avg_scores
+            self.training_history['exploration_rates'].append(self.agent.exploration_rate)
             
-            # Update visualization less frequently
+            # Update animation if needed
             if realtime_animation and episode % update_interval == 0:
-                self.visualizer.update_scores(
-                    episode=episode,
-                    score=total_reward,
-                    avg_score=avg_score,
-                    exploration_rate=self.agent.exploration_rate
-                )
-                plt.pause(0.001)  # Force GUI update
+                plt.pause(0.01)  # Force GUI update
                 
-            if episode % 100 == 0:
-                print(f"Ep {episode}/{episodes} | "
-                      f"Score: {total_reward:4.0f} | "
-                      f"Avg: {avg_score:4.0f} | "
-                      f"Eps: {self.agent.exploration_rate:.4f}")
+            # Print progress
+            if episode % 100 == 0 or episode == 1:
+                print(f"Episode {episode}/{episodes}, "
+                      f"Reward: {total_reward}, "
+                      f"Steps: {steps}, "
+                      f"Exploration Rate: {self.agent.exploration_rate:.4f}")
                 
         return self.training_history

@@ -3,21 +3,45 @@ import numpy as np
 from matplotlib.animation import FuncAnimation
 
 class Visualizer:
-    @staticmethod
-    def plot_training_history(history):
+    def __init__(self, maze, agent, environment):
+        """
+        Initialize the visualizer.
+        
+        Args:
+            maze: The maze as a 2D numpy array.
+            agent: The Q-learning agent.
+            environment: The maze environment.
+        """
+        self.maze = maze
+        self.agent = agent
+        self.environment = environment
+        self.fig, self.ax = plt.subplots(figsize=(10, 10))
+        self.cmap = plt.cm.colors.ListedColormap(['white', 'black'])
+        
+    def plot_training_history(self, history):
+        """
+        Plot the training history.
+        
+        Args:
+            history: A dictionary containing the training history.
+        """
         fig, axs = plt.subplots(3, 1, figsize=(10, 15))
+        
+        # Plot episode rewards
         axs[0].plot(history['episode_rewards'])
         axs[0].set_title('Episode Rewards')
         axs[0].set_xlabel('Episode')
         axs[0].set_ylabel('Total Reward')
         axs[0].grid(True)
         
+        # Plot episode lengths
         axs[1].plot(history['episode_lengths'])
         axs[1].set_title('Episode Lengths')
         axs[1].set_xlabel('Episode')
         axs[1].set_ylabel('Steps')
         axs[1].grid(True)
         
+        # Plot exploration rate
         axs[2].plot(history['exploration_rates'])
         axs[2].set_title('Exploration Rate')
         axs[2].set_xlabel('Episode')
@@ -27,99 +51,69 @@ class Visualizer:
         plt.tight_layout()
         plt.show()
     
-    @staticmethod
-    def visualize_q_values(q_table, maze):
-        rows, cols, _ = q_table.shape
+    def visualize_q_values(self):
+        """
+        Visualize the Q-values as a heatmap.
+        """
+        q_values = np.max(self.agent.q_table, axis=2)
         plt.figure(figsize=(12, 12))
-        plt.imshow(maze, cmap='binary')
-        
-        for i in range(1, rows-1):
-            for j in range(1, cols-1):
-                if maze[i, j] == 0:
-                    q_values = q_table[i, j]
-                    max_q = np.max(q_values)
-                    if max_q > 0:
-                        best_action = np.argmax(q_values)
-                        if best_action == 0:  # up
-                            dx, dy = 0, -0.3
-                        elif best_action == 1:  # right
-                            dx, dy = 0.3, 0
-                        elif best_action == 2:  # down
-                            dx, dy = 0, 0.3
-                        elif best_action == 3:  # left
-                            dx, dy = -0.3, 0
-                        plt.arrow(j, i, dx, dy, head_width=0.2, head_length=0.15, 
-                                  fc='red', ec='red', width=0.05)
-        
+        plt.imshow(q_values, cmap='hot')
+        plt.colorbar(label='Max Q-value')
         plt.title('Q-values Visualization')
         plt.grid(False)
         plt.show()
-
-class RealTimeVisualizer:
-    def __init__(self, maze, agent, environment):
-        self.fig, self.ax = plt.subplots(figsize=(8, 8))
-        self.maze = maze
-        self.agent = agent
-        self.environment = environment
-        
-        self.cmap = plt.cm.colors.ListedColormap(['white', 'black'])
-        self.img = self.ax.imshow(self.maze, cmap=self.cmap)
-        
-        self.path_line, = self.ax.plot([], [], 'r-', linewidth=2)
-        self.start_point = self.ax.plot(1, 0, 'go', markersize=10)[0]
-        self.goal_point = self.ax.plot(maze.shape[1]-1, maze.shape[0]-2, 
-                                      'bo', markersize=10)[0]
-        
-        self.arrows = []
-                # Add text elements for scores
-        self.score_text = self.ax.text(
-            0.02, 0.95, 
-            "Episode: 0\nScore: 0\nAvg Score: 0\nEps: 1.0000",
-            transform=self.ax.transAxes,
-            color='black',
-            fontsize=10,
-            verticalalignment='top',
-            bbox=dict(facecolor='white', alpha=0.8)
-        )
-    def update_scores(self, episode, score, avg_score, exploration_rate):
-        """Update the score display without full redraw"""
-        self.score_text.set_text(
-        f"Episode: {episode}\n"
-        f"Score: {score:.0f}\n"
-        f"Avg Score: {avg_score:.0f}\n"
-        f"Eps: {exploration_rate:.4f}"
-    )
-
+    
     def update_plot(self, frame):
-        for arrow in self.arrows:
-            arrow.remove()
-        self.arrows.clear()
+        """
+        Update the plot for animation.
         
+        Args:
+            frame: The current frame number.
+        
+        Returns:
+            A list of artists to update.
+        """
+        self.ax.clear()
+        self.ax.imshow(self.maze, cmap=self.cmap)
+        
+        # Draw arrows for Q-values
         for i in range(1, self.maze.shape[0]-1):
             for j in range(1, self.maze.shape[1]-1):
-                if self.maze[i, j] == 0:
+                if self.maze[i, j] == 0:  # Only show arrows on paths
                     q_values = self.agent.q_table[i, j]
-                    if np.max(q_values) > 0:
+                    max_q = np.max(q_values)
+                    
+                    # Only show arrows for cells with learned values
+                    if max_q > 0:
+                        # Plot an arrow for the best action
                         best_action = np.argmax(q_values)
-                        dx, dy = self._get_arrow_direction(best_action)
-                        arrow = self.ax.arrow(j, i, dx*0.3, dy*0.3, 
-                                            head_width=0.2, color='red')
-                        self.arrows.append(arrow)
+                        
+                        if best_action == 0:  # up
+                            self.ax.arrow(j, i, 0, -0.3, head_width=0.2, color='red')
+                        elif best_action == 1:  # right
+                            self.ax.arrow(j, i, 0.3, 0, head_width=0.2, color='red')
+                        elif best_action == 2:  # down
+                            self.ax.arrow(j, i, 0, 0.3, head_width=0.2, color='red')
+                        elif best_action == 3:  # left
+                            self.ax.arrow(j, i, -0.3, 0, head_width=0.2, color='red')
         
+        # Draw current best path
         path = self.agent.get_best_path(self.environment)
-        if len(path) > 1:
+        if path and len(path) > 1:
             path_array = np.array(path)
-            self.path_line.set_data(path_array[:, 1], path_array[:, 0])
-            
-        return [self.img, self.path_line] + self.arrows
-    
-    def _get_arrow_direction(self, action):
-        if action == 0:  # Up
-            return 0, -0.3
-        elif action == 1:  # Right
-            return 0.3, 0
-        elif action == 2:  # Down
-            return 0, 0.3
-        elif action == 3:  # Left
-            return -0.3, 0
-        return 0, 0
+            self.ax.plot(path_array[:, 1], path_array[:, 0], 'b-')
+            self.ax.plot(path_array[0, 1], path_array[0, 0], 'go', markersize=10)  # Start
+            self.ax.plot(path_array[-1, 1], path_array[-1, 0], 'bo', markersize=10)  # End
+        
+        # Add score text
+        self.ax.text(0.02, 0.98, f"Episode: {frame}", transform=self.ax.transAxes,
+                     verticalalignment='top', color='black',
+                     bbox=dict(facecolor='white', alpha=0.7))
+        
+        return self.ax,
+        
+    def close(self):
+        """
+        Close any resources used by the visualizer.
+        """
+        plt.close()
