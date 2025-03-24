@@ -1,5 +1,4 @@
 Maze Reinforcement Learning Project
-Overview
 
 This project implements a Q-learning algorithm to solve procedurally generated mazes. It includes maze generation, a reinforcement learning environment, a Q-learning agent, and visualization tools to monitor the learning process and results.
 Features
@@ -28,11 +27,10 @@ Installation
 
     Clone the repository:
 
-text
 
 Install the required packages:
 
-    text
+
     pip install numpy matplotlib tensorboard
 
 Usage
@@ -40,7 +38,6 @@ Basic Run
 
 To run the project with default settings:
 
-text
 python main.py
 
 Command-line Options
@@ -61,22 +58,19 @@ Examples
 
     Run with real-time visualization:
 
-text
 python main.py --visualize
 
 Train on a larger maze for more episodes:
 
-text
 python main.py --maze_size 15 --episodes 2000 --visualize
 
 Faster visualization updates:
 
-text
 python main.py --visualize --update_interval 2
 
 Train and save the model:
 
-    text
+
     python main.py --episodes 5000 --save_model
 
 Project Structure
@@ -109,12 +103,10 @@ The program will display:
 
     Q-values heatmap
 
-Customization
-
-You can modify hyperparameters like learning rate, discount factor, and exploration rate in the q_learning_agent.py file.
 Contributing
 
 Contributions to this project are welcome. Please fork the repository and submit a pull request with your changes.
+
 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
