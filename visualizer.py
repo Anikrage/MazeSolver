@@ -22,8 +22,7 @@ class Visualizer:
         Update the plot with the latest training data.
         
         Args:
-            data: Dictionary from the trainer with keys:
-                  'episode', 'total_reward', 'steps', 'exploration_rate', 'q_table', 'best_path'
+            data: Dictionary with keys: episode, total_reward, steps, exploration_rate, q_table, best_path.
         """
         self.ax.clear()
         self.ax.imshow(self.maze, cmap=self.cmap)
@@ -31,7 +30,7 @@ class Visualizer:
         self.ax.set_yticks([])
         
         q_table = data['q_table']
-        # Draw arrows for cells with positive Q-values
+        # Draw arrows for cells with learned Q-values
         for i in range(1, self.maze.shape[0] - 1):
             for j in range(1, self.maze.shape[1] - 1):
                 if self.maze[i, j] == 0:
@@ -84,7 +83,7 @@ class Visualizer:
 
     def plot_training_history(self, history):
         """
-        Plot training history (episode rewards, lengths, and exploration rates).
+        Plot training history (episode rewards, steps, exploration rate).
         """
         fig, axs = plt.subplots(3, 1, figsize=(10, 15))
         

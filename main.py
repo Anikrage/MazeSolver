@@ -14,6 +14,7 @@ def parse_args():
     parser.add_argument('--episodes', type=int, default=1000, help='Number of training episodes')
     parser.add_argument('--visualize', action='store_true', help='Enable real-time visualization')
     parser.add_argument('--save_model', action='store_true', help='Save trained model')
+    parser.add_argument('--log_tensorboard', action='store_true', help='Enable TensorBoard logging')
     parser.add_argument('--seed', type=int, default=None, help='Random seed (default: generate different maze each time)')
     return parser.parse_args()
 
@@ -39,16 +40,16 @@ def main():
     
     # Create Gymnasium environment and agent
     environment = MazeEnvironment(maze)
-    # Pass environment.rows and environment.cols to initialize Q-table correctly
     agent = QLearningAgent((environment.rows, environment.cols), seed=args.seed)
     
-    trainer = Trainer(environment, agent)
+    # Initialize Trainer with optional TensorBoard logging
+    trainer = Trainer(environment, agent, log_tensorboard=args.log_tensorboard)
     
     if args.visualize:
         visualizer = Visualizer(maze)
-        # Create FuncAnimation from training generator
+        # Use the training generator for smooth animation
         ani = visualizer.animate_training(trainer.train_generator(episodes=args.episodes), interval=50)
-        plt.show()  # Show the animation window
+        plt.show()  # This call will block and show the animation window
     else:
         # Run training without visualization
         for _ in trainer.train_generator(episodes=args.episodes):
