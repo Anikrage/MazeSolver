@@ -44,9 +44,9 @@ def main():
     
     # Initialize Trainer with optional TensorBoard logging
     trainer = Trainer(environment, agent, log_tensorboard=args.log_tensorboard)
-    
+    visualizer = Visualizer(maze)
+
     if args.visualize:
-        visualizer = Visualizer(maze)
         # Use the training generator for smooth animation
         ani = visualizer.animate_training(trainer.train_generator(episodes=args.episodes), interval=50)
         plt.show()  # This call will block and show the animation window
